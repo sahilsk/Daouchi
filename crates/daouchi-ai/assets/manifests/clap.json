@@ -1,0 +1,60 @@
+{
+  "name": "clap",
+  "version": "c28f2883575e",
+  "files": [
+    {
+      "path": "onnx/audio_model.onnx",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/onnx/audio_model.onnx",
+      "sha256": "a1c2b43c44f71e0fa841a4b86700886c199bf87699ea45632c4d831bc6c88957",
+      "size": 117528416
+    },
+    {
+      "path": "onnx/text_model.onnx",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/onnx/text_model.onnx",
+      "sha256": "6df7c51f2d78e236a03f2b816e613d538c815639d13644fe7c2124f439da9648",
+      "size": 501513769
+    },
+    {
+      "path": "tokenizer.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/tokenizer.json",
+      "sha256": "dc239041d98de27ffc3975473a1a23e3db4c937b23c138c38bbc66588bd247e5",
+      "size": 2108774
+    },
+    {
+      "path": "config.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/config.json",
+      "sha256": "39c6d90fe29cf2cce650dd5c92c38a1e35b130d9ce0bb98585222ad687ad979b",
+      "size": 699
+    },
+    {
+      "path": "preprocessor_config.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/preprocessor_config.json",
+      "sha256": "9739f58296aa6f9ac18008fd0150fb2649bc554985fbde86d0a4041c882ac753",
+      "size": 541
+    },
+    {
+      "path": "vocab.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/vocab.json",
+      "sha256": "ed19656ea1707df69134c4af35c8ceda2cc9860bf2c3495026153a133670ab5e",
+      "size": 798293
+    },
+    {
+      "path": "merges.txt",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/merges.txt",
+      "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5",
+      "size": 456318
+    },
+    {
+      "path": "special_tokens_map.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/special_tokens_map.json",
+      "sha256": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f",
+      "size": 280
+    },
+    {
+      "path": "tokenizer_config.json",
+      "url": "https://huggingface.co/Xenova/clap-htsat-unfused/resolve/c28f2883575e590e04d3146ff0713c2448d691ba/tokenizer_config.json",
+      "sha256": "2c964a338683aec3695ea37687271e75b40905233f5d2a5bbb9be8cb40c4d0a0",
+      "size": 1392
+    }
+  ]
+}

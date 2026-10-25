@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The Daouchi UI is served in-process over the daouchi:// custom URI scheme (no TCP port); allow it to start native drag-out of exported files.",
+  "windows": ["main"],
+  "remote": { "urls": ["daouchi://localhost/*", "daouchi://localhost", "http://daouchi.localhost/*", "http://daouchi.localhost"] },
+  "permissions": ["core:default", "drag:default"]
+}

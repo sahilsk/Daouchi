@@ -1,0 +1,29 @@
+[package]
+name = "daouchi-desktop"
+version = "0.1.0"
+license = "MIT"
+authors = ["Sonu Kumar Meena"]
+repository = "https://github.com/sahilsk/Daouchi"
+edition = "2021"
+description = "Daouchi desktop shell (Tauri v2) serving the in-process axum Router over a custom URI scheme (no TCP port)"
+
+[[bin]]
+name = "daouchi-desktop"
+path = "src/main.rs"
+
+[features]
+# enabled by `cargo tauri build` / scripts/bundle-macos.sh for release builds
+custom-protocol = ["tauri/custom-protocol"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+daouchi = { path = "../.." }
+tauri = { version = "2.12", features = [] }
+tauri-plugin-single-instance = "2.5"
+tauri-plugin-drag = "2.1"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

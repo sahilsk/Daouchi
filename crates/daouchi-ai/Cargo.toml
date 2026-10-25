@@ -1,0 +1,37 @@
+[package]
+name = "daouchi-ai"
+version = "0.1.0"
+license = "MIT"
+authors = ["Sonu Kumar Meena"]
+repository = "https://github.com/sahilsk/Daouchi"
+edition = "2021"
+description = "In-process AI engines for Daouchi (ONNX Runtime): CLAP, AST, UMAP, model manager"
+
+[dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+dirs = "6"
+sha2 = "0.10"
+hex = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+tokio = { version = "1", features = ["fs", "io-util", "rt", "macros"] }
+futures = "0.3"
+# audio
+symphonia = { version = "0.5", features = ["mp3", "wav", "flac", "aac", "isomp4", "aiff", "all-codecs"] }
+rubato = "0.16"
+hound = "3"
+realfft = "3"
+rustfft = "6"
+# ml runtime: load-dynamic because the ONNX Runtime library is supplied separately, see docs/DESKTOP_PACKAGING.md
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["std", "ndarray", "load-dynamic", "coreml"] }
+ndarray = "0.16"
+tokenizers = { version = "0.21", default-features = false, features = ["onig"] }
+# dimension reduction
+rayon = "1"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["rt-multi-thread"] }

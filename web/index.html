@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daouchi</title>
+  <script src="/vendor/tailwind-play-3.4.17.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Tailwind config — use CSS vars where possible, disable preflight conflict
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          colors: {
+            bg:      'var(--bg)',
+            panel:   'var(--panel)',
+            sidebar: 'var(--sidebar)',
+            border:  'var(--border)',
+            accent:  'var(--accent)',
+            text:    'var(--text)',
+            muted:   'var(--muted)',
+            hover:   'var(--hover)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 10px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .tab-btn .kbd {
+      font-size: 9px;
+      background: var(--border);
+      color: var(--muted);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    /* Tab content */
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    /* Dashboard grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .text-accent { color: var(--accent); }
+    /* Dashboard sections */
+    .dashboard-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .dashboard-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 0 0 12px 0;
+    }
+    /* Collection cards */
+    .collection-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .collection-card {
+      display: flex;
+      align-items: stretch;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      overflow: hidden;
+    }
+    .collection-card:hover { background: var(--hover); border-color: var(--accent); }
+    .collection-card-bar {
+      width: 4px;
+      flex-shrink: 0;
+    }
+    .collection-card-body {
+      padding: 10px 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .collection-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .collection-card-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    /* Two-column layout */
+    .dashboard-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 800px) { .dashboard-two-col { grid-template-columns: 1fr; } }
+    /* Recent / needs-attention rows */
+    .recent-sound-row,
+    .needs-attention-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .recent-sound-row:last-child,
+    .needs-attention-row:last-child { border-bottom: none; }
+    .recent-sound-row:hover,
+    .needs-attention-row:hover { color: var(--accent); }
+    /* Job items */
+    .job-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .job-item:last-child { border-bottom: none; }
+    .job-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .job-dot.running { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+    .job-dot.idle    { background: var(--green); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    /* Progress bar (reuse existing if available) */
+    .progress-bar-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    /* Semantic score badge */
+    .semantic-score-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 8px;
+      color: #fff;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    /* Radar tab full-height */
+    #radar-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+    }
+    /* Duration classes */
+    .dur-short  { color: var(--green); }
+    .dur-medium { color: var(--text); }
+    .dur-long   { color: var(--yellow); }
+    .dur-xlong  { color: var(--accent); }
+    /* Shortcut modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .text-muted { color: var(--muted); }
+    /* ── Sonic Blueprint bars ──────────────────────────── */
+    .blueprint-bars { display:flex;flex-direction:column;gap:8px;margin-bottom:16px; }
+    .blueprint-bar-row { display:flex;align-items:center;gap:8px; }
+    .blueprint-bar-label { font-size:12px;color:var(--text-dim);width:56px;flex-shrink:0; }
+    .blueprint-bar-track { flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden; }
+    .blueprint-bar-fill { height:100%;border-radius:5px;transition:width .4s ease; }
+    .blueprint-bar-count { font-size:11px;color:var(--muted);width:36px;text-align:right;flex-shrink:0; }
+    .sfx-category-title { font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px; }
+    .sfx-categories { display:flex;flex-wrap:wrap;gap:6px; }
+    .sfx-cat-btn { display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer;transition:background .12s,border-color .12s; }
+    .sfx-cat-btn:hover { background:var(--hover);border-color:var(--accent);color:var(--accent); }
+    .sfx-cat-emoji { font-size:14px; }
+    .sfx-cat-label { flex:1; }
+    .sfx-cat-arrow { font-size:11px;color:var(--muted); }
+    /* ── Mood result rows (reuse in sfx results too) ─── */
+    .mood-result-row { display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s; }
+    .mood-result-row:last-child { border-bottom:none; }
+    .mood-result-row:hover { background:var(--hover); }
+    /* ── Tag cloud ──────────────────────────────────── */
+    .tag-cloud-item { background:rgba(228,122,42,.1);border:1px solid rgba(228,122,42,.2);border-radius:12px;padding:2px 8px;color:var(--text-dim);cursor:pointer;font-size:11px;transition:background .12s,color .12s;line-height:1.6; }
+    .tag-cloud-item:hover { background:rgba(228,122,42,.25);color:var(--accent); }
+    /* ── Collection breakdown ───────────────────────── */
+    .blueprint-col-row { display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;border-radius:3px;position:relative;overflow:hidden; }
+    .blueprint-col-row:hover .blueprint-col-name { color:var(--accent); }
+    .blueprint-col-bar { position:absolute;left:0;top:0;bottom:0;opacity:.15;border-radius:3px;pointer-events:none; }
+    .blueprint-col-name { flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;z-index:1; }
+    .sort-select {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .result-timestamp {
+      font-size: 10px;
+      color: var(--muted, #666);
+      white-space: nowrap;
+    }
+    /* ── Add-to-project dropdown ──────────────────────────── */
+    .add-to-project-wrap { position:relative;display:inline-flex;align-items:center; }
+    .add-project-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity .15s, background .15s;
+      white-space: nowrap;
+    }
+    .result-row:hover .add-project-btn { opacity: 1; }
+    .add-project-btn:hover { background: var(--hover); color: var(--accent); }
+    .project-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      min-width: 160px;
+      z-index: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      overflow: hidden;
+    }
+    .project-dropdown.open { display: block; }
+    .project-dropdown-item {
+      padding: 7px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+      transition: background .1s;
+    }
+    .project-dropdown-item:hover { background: var(--hover); }
+    .project-dropdown-new { color: var(--muted); border-top: 1px solid var(--border-dim); }
+    .project-dropdown-new:hover { color: var(--accent); }
+    /* ── Project sounds SoundCloud-style rows ─────────────────── */
+    .proj-sound-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .proj-sound-row:hover  { background: var(--hover); }
+    .proj-sound-row.selected { background: rgba(228,122,42,.1); border-left: 3px solid var(--accent); padding-left: 13px; }
+    .proj-play-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: none;
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, color .15s;
+      padding-left: 2px; /* optical center for ▶ */
+    }
+    .proj-play-btn:hover, .proj-play-btn.playing { background: var(--accent); color: #fff; }
+    .proj-sound-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex-shrink: 0;
+      width: 220px;
+    }
+    .proj-sound-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .proj-sound-sub {
+      font-size: 10px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+    .proj-waveform {
+      flex: 1;
+      height: 44px;
+      min-width: 0;
+      overflow: hidden;
+      border-radius: 3px;
+    }
+    .proj-waveform wave { border-radius: 3px; overflow: hidden !important; }
+    .proj-remove-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+      opacity: .4;
+      transition: opacity .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .proj-remove-btn:hover { opacity: 1; color: #d05454; }
+    /* ── Mini waveform (library result rows) ─── */
+    .mini-wave { overflow:hidden; border-radius:3px; opacity:.6; }
+    .mini-wave wave { overflow:hidden !important; }
+    .result-row:hover .mini-wave { opacity:1; }
+    .result-row.selected .mini-wave { opacity:1; }
+    /* ── Artwork wrapper + overlay play button ─── */
+    .artwork-wrap {
+      position: relative;
+      flex-shrink: 0;
+      background: var(--panel-raised);
+      overflow: hidden;
+    }
+    /* Dark overlay that appears on row hover */
+    .artwork-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background .15s;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .result-row:hover .artwork-overlay,
+    .result-row.selected .artwork-overlay,
+    .proj-sound-row:hover .artwork-overlay,
+    .proj-sound-row.selected .artwork-overlay { background: rgba(0,0,0,0.32); }
+    /* Small centered play circle — sits above overlay */
+    .artwork-play-btn {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      color: #fff;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .15s, background .15s, border-color .15s;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2; padding: 0; margin: 0;
+    }
+    .result-row:hover .artwork-play-btn,
+    .result-row.selected .artwork-play-btn,
+    .proj-sound-row:hover .artwork-play-btn,
+    .proj-sound-row.selected .artwork-play-btn { opacity: 1; }
+    .artwork-play-btn:hover { background: rgba(228,122,42,0.75); border-color: rgba(228,122,42,0.9); }
+    .artwork-play-btn.playing { opacity: 1; background: rgba(228,122,42,0.65); border-color: rgba(228,122,42,0.85); }
+    /* Label dot on right side of row */
+    .row-label-btn {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: none; background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      opacity: 0.5;
+      transition: opacity .15s, transform .15s;
+      padding: 0;
+    }
+    .result-row:hover .row-label-btn,
+    .result-row.selected .row-label-btn { opacity: 1; }
+    .row-label-btn:hover { transform: scale(1.2); opacity: 1; }
+    .row-label-btn.labeled { opacity: 1; }
+
+    /* ── Library row play button (standalone, legacy — keep for compat) ─── */
+    .lib-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(228,122,42,0.12);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      opacity: 0;
+      box-shadow: none;
+    }
+    .result-row:hover .lib-play-btn,
+    .result-row.selected .lib-play-btn { opacity: 1; }
+    .lib-play-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 0 0 3px rgba(228,122,42,0.22);
+    }
+    .lib-play-btn:active { transform: scale(0.96); }
+    .result-row.selected .lib-play-btn { background: rgba(228,122,42,0.18); }
+    /* Remove the old .artwork-play-btn override block that used !important */
+    /* ── Sort column header buttons ─── */
+    .sort-col-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .sort-col-btn:hover { color: var(--text); background: var(--hover); }
+    .sort-col-btn.active { color: var(--accent); }
+    /* ── Folder reveal button ─── */
+    .folder-reveal-btn { opacity:0; background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; padding:0 2px; }
+    .folder-item:hover .folder-reveal-btn { opacity:1; }
+    .folder-remove-btn:hover { color:#e5534b; }
+    .modal-btn.danger { background:#b3372f; border-color:#b3372f; color:#fff; }
+    .modal-btn.danger:hover:not(:disabled) { background:#c9413a; }
+    .rm-dlg-path { font-family:ui-monospace,Menlo,monospace; font-size:12px; background:var(--panel-raised); border:1px solid var(--border); border-radius:4px; padding:6px 8px; margin:6px 0 10px; word-break:break-all; }
+    .rm-dlg-note { font-size:12px; color:var(--text-dim); line-height:1.5; margin:8px 0; }
+    .rm-dlg-trash { display:flex; gap:8px; align-items:flex-start; font-size:12px; margin:12px 0 4px; padding:8px; border:1px solid var(--border); border-radius:4px; cursor:pointer; }
+    .rm-dlg-fail { max-height:140px; overflow:auto; font-size:11px; color:#e5534b; margin-top:6px; }
+    /* ── Row action buttons (copy, finder, delete) ─── */
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity .15s;
+      flex-shrink: 0;
+    }
+    .result-row:hover .row-actions,
+    .result-row.selected .row-actions { opacity: 1; }
+    .row-action-btn {
+      width: 24px; height: 24px;
+      border: none; background: none;
+      color: var(--muted);
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color .12s, background .12s;
+    }
+    .row-action-btn:hover { background: var(--hover); color: var(--text); }
+    .row-action-btn.danger:hover { background: rgba(208,84,84,.15); color: var(--red); }
+    .row-action-btn.copied { color: var(--green); }
+    /* ── Rename / move modal ─── */
+    .rename-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000;
+    }
+    .rename-modal-box {
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      width: 480px;
+      max-width: 90vw;
+    }
+    .rename-modal-box h3 { margin: 0 0 14px; font-size: 14px; font-weight: 600; }
+    .rename-modal-box input {
+      width: 100%; padding: 7px 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-size: 13px; margin-bottom: 10px;
+    }
+    .rename-modal-box input:focus { outline: none; border-color: var(--accent); }
+    .rename-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    /* ── Star rating ── */
+    .star-rating { display:flex; align-items:center; gap:1px; flex-shrink:0; }
+    .star-btn {
+      background: none; border: none; padding: 1px; cursor: pointer;
+      font-size: 13px; line-height: 1;
+      color: var(--muted);
+      transition: color .1s, transform .1s;
+      opacity: 0;
+    }
+    .result-row:hover .star-btn,
+    .result-row.selected .star-btn { opacity: 1; }
+    .star-btn.filled { color: #f5a623; opacity: 1; }
+    .star-btn:hover { color: #f5a623; transform: scale(1.2); }
+    /* ── Multi-select ── */
+    .row-checkbox {
+      width: 16px; height: 16px; flex-shrink: 0;
+      appearance: none; -webkit-appearance: none;
+      border: 1.5px solid var(--border);
+      border-radius: 3px; background: transparent;
+      cursor: pointer; opacity: 0;
+      transition: opacity .12s, background .1s;
+    }
+    .result-row:hover .row-checkbox,
+    .result-row.multi-checked .row-checkbox,
+    .any-selected .row-checkbox { opacity: 1; }
+    .row-checkbox:checked {
+      background: var(--accent); border-color: var(--accent);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 6l2.5 2.5L9 3.5' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: center;
+      opacity: 1;
+    }
+    /* ── Bulk action toolbar ── */
+    .bulk-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 12px;
+      background: rgba(228,122,42,.1);
+      border: 1px solid rgba(228,122,42,.25);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .bulk-bar-label { color: var(--text); font-weight: 600; flex: 1; }
+    .bulk-btn {
+      padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--panel); color: var(--text); font-size: 11px; cursor: pointer;
+      transition: background .12s;
+    }
+    .bulk-btn:hover { background: var(--hover); }
+    .bulk-btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .bulk-btn.accent:hover { opacity: .88; }
+    /* ── Bulk tag modal ── */
+    .bulk-tag-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center; z-index: 9100;
+    }
+    .bulk-tag-modal-box {
+      background: var(--panel-raised); border: 1px solid var(--border);
+      border-radius: 8px; padding: 20px 24px; width: 380px; max-width: 92vw;
+    }
+    .bulk-tag-modal-box h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+    .bulk-tag-modal-box input {
+      width: 100%; padding: 7px 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-size: 13px; margin-bottom: 8px;
+    }
+    .bulk-tag-modal-box input:focus { outline: none; border-color: var(--accent); }
+    .bulk-tag-modal-note { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+    .bulk-tag-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<div id="app" x-data="daouchi()" x-init="init()" x-cloak>
+
+  <!-- ═══════════════════════════════════════════════════════════ HEADER -->
+  <div id="header">
+    <!-- Logo -->
+    <a href="#library" @click.prevent="switchTab('library')" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;">
+      <!-- Waveform mark -->
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="26" height="26" rx="6" fill="#e47a2a"/>
+        <g stroke="#fff" stroke-linecap="round" stroke-width="1.8">
+          <line x1="4"  y1="13" x2="4"  y2="13"/>
+          <line x1="7"  y1="10" x2="7"  y2="16"/>
+          <line x1="10" y1="7"  x2="10" y2="19"/>
+          <line x1="13" y1="5"  x2="13" y2="21"/>
+          <line x1="16" y1="8"  x2="16" y2="18"/>
+          <line x1="19" y1="11" x2="19" y2="15"/>
+          <line x1="22" y1="13" x2="22" y2="13"/>
+        </g>
+      </svg>
+      <span style="font-size:15px;font-weight:700;letter-spacing:0.04em;color:var(--text);font-family:system-ui,-apple-system,sans-serif;">daouchi</span>
+    </a>
+
+    <!-- Search bar -->
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search sounds…"
+        x-model="query"
+        @keydown.enter="search()"
+      />
+      <!-- Semantic toggle -->
+      <button
+        class="semantic-toggle"
+        :class="{ active: semanticMode }"
+        @click="semanticMode = !semanticMode; search()"
+        title="Toggle semantic / AI search (Alt+S)"
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <span x-text="semanticMode ? 'AI' : 'Keyword'"></span>
+      </button>
+      <!-- Sort dropdown -->
+      <select x-model="sortOrder" @change="search()" class="sort-select" title="Sort order">
+        <option value="date_desc">Newest indexed</option>
+        <option value="date_asc">Oldest indexed</option>
+        <option value="modified_desc">Recently modified</option>
+        <option value="modified_asc">Least recently modified</option>
+        <option value="name_asc">Name A–Z</option>
+        <option value="name_desc">Name Z–A</option>
+        <option value="duration_asc">Shortest</option>
+        <option value="duration_desc">Longest</option>
+        <option value="size_desc">Largest</option>
+      </select>
+    </div>
+
+    <!-- Autoplay toggle switch -->
+    <button
+      class="autoplay-switch"
+      :class="{ on: autoplay }"
+      @click="toggleAutoplay()"
+      title="Auto-play on selection"
+      style="display:flex;align-items:center;gap:6px;"
+    >
+      <span style="font-size:10px;color:var(--muted);letter-spacing:.03em;user-select:none;">Auto</span>
+      <div class="switch-track">
+        <div class="switch-thumb"></div>
+      </div>
+    </button>
+
+    <!-- Reindex button -->
+    <button
+      class="header-btn accent-btn"
+      @click="showIndexModal = true"
+      :disabled="indexing"
+      :title="indexing ? indexPhaseLabel : 'Index / Reindex library'"
+    >
+      <span x-show="indexing" class="spinner" style="width:9px;height:9px;border-width:1.5px;margin:0;"></span>
+      <svg x-show="!indexing" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span x-text="indexing ? (indexIndeterminate ? 'Scanning…' : indexProgressPct + '%') : 'Index'"></span>
+    </button>
+
+    <!-- Command palette button -->
+    <button
+      class="header-btn"
+      @click="openCmdPalette()"
+      title="Command palette (⌘K)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="4" width="6" height="6" rx="1"/>
+        <rect x="14" y="4" width="6" height="6" rx="1"/>
+        <rect x="4" y="14" width="6" height="6" rx="1"/>
+        <rect x="14" y="14" width="6" height="6" rx="1"/>
+      </svg>
+      <kbd style="font-size:10px;margin-left:1px;color:var(--muted);">⌘K</kbd>
+    </button>
+
+    <!-- AI models button -->
+    <button
+      class="header-btn"
+      @click="$store.models.openPanel()"
+      title="AI models"
+      style="position:relative;"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>
+      <span>AI</span>
+      <span x-show="$store.models.anyMissing()" style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+    </button>
+
+    <!-- Shortcuts help button -->
+    <button
+      class="header-btn"
+      @click="showShortcuts = true"
+      title="Keyboard shortcuts (?)"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+
+    <!-- Async job status pill -->
+    <div
+      class="job-pill"
+      x-show="indexing || radarStatus === 'computing' || radarStatus === 'generating'"
+    >
+      <span class="spinner" style="width:8px;height:8px;border-width:1.5px;margin:0;flex-shrink:0;"></span>
+      <template x-if="indexing">
+        <span x-text="indexIndeterminate ? ('Scanning… ' + U.num(indexProgress.discovered) + ' found') : ('Indexing ' + indexProgressPct + '%')"></span>
+      </template>
+      <template x-if="!indexing && (radarStatus === 'computing' || radarStatus === 'generating')">
+        <span x-text="'AI Index ' + (radarProgress.total > 0 ? Math.round(radarProgress.done / radarProgress.total * 100) + '%' : '…')"></span>
+      </template>
+    </div>
+
+    <!-- Theme toggle -->
+    <button
+      class="header-btn"
+      @click="toggleTheme()"
+      :title="themeLight ? 'Switch to dark theme' : 'Switch to light theme'"
+    >
+      <svg x-show="!themeLight" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/>
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+      <svg x-show="themeLight" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+
+    <!-- Total count -->
+    <span style="font-size:11px;color:var(--muted);white-space:nowrap;" x-show="!loading" x-text="total.toLocaleString() + ' sounds'"></span>
+  </div><!-- /header -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════ TAB BAR -->
+  <div class="tab-bar">
+    <!-- Library tab -->
+    <button
+      class="tab-btn"
+      :class="{ active: activeTab === 'library' }"
+      @click="switchTab('library')"
+      title="Library (⌘L)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Library
+      <span class="kbd">⌘L</span>
+    </button>
+
+    <!-- AI Dashboard tab -->
+    <button
+      class="tab-btn"
+      :class="{ active: activeTab === 'dashboard' }"
+      @click="switchTab('dashboard')"
+      title="AI Dashboard (⌘D)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 20V10M12 20V4M6 20v-6"/>
+      </svg>
+      AI Dashboard
+      <span class="kbd">⌘D</span>
+    </button>
+
+    <!-- Radar tab -->
+    <button
+      class="tab-btn"
+      :class="{ active: activeTab === 'radar' }"
+      @click="switchTab('radar')"
+      title="Acoustic Radar (⌘R)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        <line x1="22" y1="12" x2="18" y2="12"/>
+      </svg>
+      Radar
+      <span x-show="radarStatus === 'computing'" style="font-size:9px;color:var(--muted)">(…)</span>
+      <span class="kbd">⌘R</span>
+    </button>
+
+    <!-- Projects tab -->
+    <button
+      class="tab-btn"
+      :class="{ active: activeTab === 'projects' }"
+      @click="switchTab('projects')"
+      title="Projects (⌘P)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+      Projects
+      <span class="kbd">⌘P</span>
+    </button>
+  </div><!-- /tab-bar -->
+
+  <!-- ═══ Content wrapper: tab column on left, shared player on right ═══ -->
+  <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+
+  <!-- ── Tab content column ── -->
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;">
+
+  <!-- ═══════════════════════════════════════════════ LIBRARY TAB -->
+  <div id="main-body" x-show="activeTab === 'library'" style="display:flex;flex:1;overflow:hidden;min-height:0;">
+
+    <!-- ──────────────────────────────────────────────── SIDEBAR -->
+    <div id="sidebar">
+
+      <!-- Indexing card -->
+      <div class="idx-card" x-show="indexing || indexSummary" x-cloak
+           :class="{ 'idx-done': indexSummary && indexSummary.status === 'done', 'idx-cancelled': indexSummary && indexSummary.status === 'cancelled', 'idx-error': indexSummary && String(indexSummary.status).startsWith('error') }">
+
+        <!-- running -->
+        <template x-if="indexing">
+          <div>
+            <div class="idx-head">
+              <span class="spinner idx-spin"></span>
+              <span class="idx-title">Indexing your library</span>
+              <button class="idx-x" x-show="!indexCancelling" @click="indexAskCancel()"
+                      title="Cancel indexing" aria-label="Cancel indexing">&times;</button>
+            </div>
+            <div class="idx-phase" x-text="indexPhaseLabel"></div>
+
+            <div class="progress-bar-track idx-bar" :class="{ 'idx-indeterminate': indexIndeterminate }">
+              <div class="progress-bar-fill" :style="indexIndeterminate ? '' : 'width:' + indexProgressPct + '%'"></div>
+            </div>
+            <div class="idx-row">
+              <template x-if="indexIndeterminate">
+                <span x-text="'Found ' + U.num(indexProgress.discovered) + ' files so far'"></span>
+              </template>
+              <template x-if="!indexIndeterminate">
+                <span><b x-text="indexProgressPct + '%'"></b> &middot; <span x-text="U.num(indexProgress.done) + ' / ' + U.num(indexProgress.total) + ' files'"></span></span>
+              </template>
+              <span class="idx-dim" x-text="indexFolderStep"></span>
+            </div>
+
+            <div class="idx-meta" x-show="indexProgress.current_root" :title="indexProgress.current_root">
+              <span class="idx-dim">Folder</span> <span class="idx-ell" x-text="indexProgress.current_root"></span>
+            </div>
+            <div class="idx-meta" x-show="indexFileName" :title="indexProgress.current_path">
+              <span class="idx-dim">File</span> <span class="idx-ell" x-text="indexFileName"></span>
+            </div>
+            <div class="idx-row idx-dim">
+              <span x-text="'Elapsed ' + U.spoken(indexProgress.elapsed_ms)"></span>
+              <span x-show="indexSpeed" x-text="indexSpeed"></span>
+              <span x-show="indexEta" x-text="indexEta"></span>
+            </div>
+
+            <div class="idx-row idx-warn" x-show="indexProgress.errors > 0">
+              <span x-text="U.num(indexProgress.skipped) + ' skipped, ' + U.num(indexProgress.errors) + ' with problems'"></span>
+              <a href="#" @click.prevent="indexErrorsOpen = !indexErrorsOpen" x-text="indexErrorsOpen ? 'Hide' : 'Details'"></a>
+            </div>
+            <ul class="idx-errors" x-show="indexErrorsOpen && indexProgress.errors > 0">
+              <template x-for="(er, i) in (indexProgress.recent_errors || [])" :key="i">
+                <li :title="er.path"><span class="idx-ell" x-text="er.path"></span><em x-text="er.reason"></em></li>
+              </template>
+            </ul>
+
+            <div class="idx-confirm" x-show="indexCancelConfirm">
+              <div>Stops after the current batch. Files already indexed are kept; your tags, favorites and ratings are not affected.</div>
+              <div class="idx-confirm-btns">
+                <button class="modal-btn primary" @click="indexStop()">Stop indexing</button>
+                <button class="modal-btn" @click="indexKeepGoing()">Keep going</button>
+              </div>
+            </div>
+            <div class="idx-row idx-dim" x-show="indexCancelling">Cancelling… finishing the current batch</div>
+          </div>
+        </template>
+
+        <!-- finished / cancelled / error -->
+        <template x-if="!indexing && indexSummary">
+          <div>
+            <div class="idx-head">
+              <span class="idx-title" x-text="indexSummary.status === 'done' ? 'Indexing complete' : (indexSummary.status === 'cancelled' ? 'Indexing cancelled' : 'Indexing failed')"></span>
+              <button class="idx-x" @click="indexDismiss()" title="Dismiss" aria-label="Dismiss">&times;</button>
+            </div>
+            <div class="idx-phase" x-text="indexSummaryText"></div>
+            <div class="idx-row idx-dim" x-show="indexSummary.status === 'cancelled'">Nothing was removed; your tags, favorites and ratings are unaffected.</div>
+            <div class="idx-row idx-warn" x-show="indexSummary.errors > 0">
+              <span x-text="U.num(indexSummary.errors) + ' file' + (indexSummary.errors === 1 ? '' : 's') + ' had problems'"></span>
+              <a href="#" @click.prevent="indexErrorsOpen = !indexErrorsOpen" x-text="indexErrorsOpen ? 'Hide' : 'Details'"></a>
+            </div>
+            <ul class="idx-errors" x-show="indexErrorsOpen && indexSummary.errors > 0">
+              <template x-for="(er, i) in (indexSummary.recent_errors || [])" :key="i">
+                <li :title="er.path"><span class="idx-ell" x-text="er.path"></span><em x-text="er.reason"></em></li>
+              </template>
+              <li class="idx-dim" x-show="indexSummary.errors > (indexSummary.recent_errors || []).length">…showing the last 20</li>
+            </ul>
+          </div>
+        </template>
+      </div>
+
+      <!-- Folder tree -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Folders</div>
+        <!-- "All" root -->
+        <div
+          class="folder-item"
+          :class="{ active: activeFolderPath === null }"
+          @click="activeFolderPath = null; search()"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          All Sounds
+          <span class="folder-count" x-text="total"></span>
+        </div>
+
+        <template x-for="node in flattenTree(folderTree)" :key="node.key || node.path">
+          <div
+            class="folder-item"
+            :class="{ active: activeFolderPath === node.path }"
+            :style="'padding-left:' + (6 + node.depth * 14) + 'px'"
+            @click="selectFolder(node.path)"
+          >
+            <!-- Chevron if has children -->
+            <span
+              class="folder-chevron"
+              :class="{ open: folderExpanded[node.path] }"
+              x-show="node.children && node.children.length"
+              @click.stop="toggleFolder(node.path)"
+            >▶</span>
+            <span x-show="!node.children || !node.children.length" style="width:10px;display:inline-block;"></span>
+
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" x-text="node.name"></span>
+            <span class="folder-count" x-text="node.count"></span>
+            <button class="folder-reveal-btn" x-show="node.root_id != null" @click.stop="revealFolder(node)" title="Reveal in Finder">📂</button>
+            <button class="folder-reveal-btn folder-remove-btn" x-show="node.root_id != null" @click.stop="openRemoveFolder(node)" title="Remove from library…">🗑</button>
+          </div>
+        </template>
+
+        <div x-show="libraryRoots.length" style="margin-top:8px;">
+          <div class="sidebar-label">Indexed folders</div>
+          <template x-for="root in libraryRoots" :key="root.id">
+            <div class="folder-item" :title="root.path">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;direction:rtl;text-align:left;" x-text="'\u200E' + root.path"></span>
+              <span class="folder-count" x-text="root.sounds"></span>
+              <button class="folder-reveal-btn" @click.stop="_reveal({kind:'folder', root_id: root.id, rel_path: ''})" title="Reveal in Finder">📂</button>
+              <button class="folder-reveal-btn folder-remove-btn" @click.stop="openRemoveRoot(root)" title="Remove from library…">🗑</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+      <!-- Filters -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Filters</div>
+
+        <!-- Source type -->
+        <select class="filter-select" x-model="filterSource">
+          <option value="">All Sources</option>
+          <option value="sfx">SFX</option>
+          <option value="music">Music</option>
+          <option value="ambience">Ambience</option>
+        </select>
+
+        <!-- Format -->
+        <select class="filter-select" x-model="filterExt">
+          <option value="">All Formats</option>
+          <option value="wav">WAV</option>
+          <option value="mp3">MP3</option>
+          <option value="aiff">AIFF</option>
+          <option value="flac">FLAC</option>
+          <option value="ogg">OGG</option>
+        </select>
+
+        <!-- Duration range -->
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Duration (sec)</div>
+        <div class="filter-row">
+          <input type="number" placeholder="Min" min="0" x-model.number="filterDurMin" />
+          <input type="number" placeholder="Max" min="0" x-model.number="filterDurMax" />
+        </div>
+
+        <!-- Label filter -->
+        <div class="sidebar-label" style="margin-bottom:5px;">Label</div>
+        <div class="label-filter-row">
+          <button class="label-dot-btn" :class="{active: filterLabel===0}" @click="filterLabel=0" title="All labels">
+            <span class="label-dot label-dot-all">All</span>
+          </button>
+          <button class="label-dot-btn" :class="{active: filterLabel===1}" @click="filterLabel=filterLabel===1?0:1" title="Red">
+            <span class="label-dot" style="background:#ff3b30;"></span>
+          </button>
+          <button class="label-dot-btn" :class="{active: filterLabel===2}" @click="filterLabel=filterLabel===2?0:2" title="Orange">
+            <span class="label-dot" style="background:#ff9f0a;"></span>
+          </button>
+          <button class="label-dot-btn" :class="{active: filterLabel===3}" @click="filterLabel=filterLabel===3?0:3" title="Yellow">
+            <span class="label-dot" style="background:#ffd60a;"></span>
+          </button>
+          <button class="label-dot-btn" :class="{active: filterLabel===4}" @click="filterLabel=filterLabel===4?0:4" title="Green">
+            <span class="label-dot" style="background:#30d158;"></span>
+          </button>
+          <button class="label-dot-btn" :class="{active: filterLabel===5}" @click="filterLabel=filterLabel===5?0:5" title="Blue">
+            <span class="label-dot" style="background:#0a84ff;"></span>
+          </button>
+        </div>
+
+        <!-- Min star rating -->
+        <div class="sidebar-label" style="margin-top:8px;margin-bottom:5px;">Min Stars</div>
+        <div class="star-filter-row">
+          <button class="star-filter-btn" :class="{active: filterMinRating===0}" @click="filterMinRating=0" title="Any rating">Any</button>
+          <template x-for="n in [1,2,3,4,5]" :key="n">
+            <button class="star-filter-btn" :class="{active: filterMinRating===n}" @click="filterMinRating=filterMinRating===n?0:n" x-text="'★'.repeat(n)" style="font-size:10px;letter-spacing:-1px;"></button>
+          </template>
+        </div>
+
+        <!-- Favorites -->
+        <label class="filter-checkbox-row" style="margin-top:8px;">
+          <input type="checkbox" x-model="filterFavorite" />
+          ⭐ Favorites only
+        </label>
+
+        <!-- Reset filters -->
+        <button
+          class="ctrl-btn"
+          style="font-size:11px;width:100%;margin-top:2px;"
+          @click="resetFilters()"
+          x-show="filterSource || filterExt || filterDurMin !== null || filterDurMax !== null || filterFavorite || filterLabel || filterMinRating || filterTags.length || filterBundle || activeFolderPath"
+        >
+          Clear filters
+        </button>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+      <!-- Tags -->
+      <div class="sidebar-section">
+        <div class="sidebar-label">Tags</div>
+        <div class="tags-wrap">
+          <template x-for="tag in allTags.slice(0,60)" :key="tag">
+            <span
+              class="tag-chip"
+              :class="{ active: isTagActive(tag) }"
+              @click="toggleTagFilter(tag)"
+              x-text="tag"
+            ></span>
+          </template>
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+      <!-- Bundles -->
+      <div class="sidebar-section">
+        <div class="sidebar-label" style="display:flex;justify-content:space-between;align-items:center;">
+          Bundles
+          <button
+            style="font-size:15px;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;line-height:1;"
+            @click="showCreateBundle = !showCreateBundle"
+            title="New bundle"
+          >+</button>
+        </div>
+
+        <!-- Create bundle inline -->
+        <div x-show="showCreateBundle" style="margin-bottom:8px;">
+          <div style="display:flex;gap:4px;">
+            <input
+              class="modal-input"
+              style="margin:0;"
+              type="text"
+              placeholder="Bundle name"
+              x-model="newBundleName"
+              @keydown.enter="createBundle()"
+              @keydown.escape="showCreateBundle=false"
+            />
+            <button class="modal-btn primary" @click="createBundle()" style="white-space:nowrap;">Add</button>
+          </div>
+        </div>
+
+        <!-- Bundle list -->
+        <div x-show="!bundles.length" style="font-size:11px;color:var(--muted);padding:4px 0;">No bundles yet.</div>
+        <template x-for="b in bundles" :key="b.id">
+          <div
+            class="bundle-item"
+            :class="{ active: filterBundle === b.id }"
+            @click="selectBundle(b.id)"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" x-text="b.name"></span>
+            <span class="bundle-tag-count" x-text="(b.tags||[]).length + ' tags'"></span>
+            <div class="bundle-actions">
+              <button @click.stop="deleteBundle(b, $event)" title="Delete bundle">✕</button>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+
+      <!-- Projects -->
+      <div class="sidebar-section" id="projects-panel">
+        <div class="sidebar-section-header">Projects</div>
+        <div id="projects-sidebar"></div>
+      </div>
+
+      <!-- Idle status line (shown when no jobs active) -->
+      <div
+        style="border-top:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:5px;"
+        x-show="!indexing && radarStatus !== 'computing' && radarStatus !== 'generating'"
+      >
+        <span style="width:6px;height:6px;border-radius:50%;background:#4caf50;flex-shrink:0;display:inline-block;"></span>
+        <span style="font-size:10px;color:var(--muted);">
+          Ready ·
+          <span x-text="total.toLocaleString() + ' sounds'"></span>
+          <template x-if="radarStatus === 'ready'"><span> · AI ready</span></template>
+          <template x-if="radarStatus === 'not_started' || radarStatus === 'none'"><span style="color:#e4892a;"> · AI index not built</span></template>
+        </span>
+      </div>
+
+    </div><!-- /sidebar -->
+
+
+    <!-- ──────────────────────────────────────── RESULTS AREA -->
+    <div id="results-area" style="position:relative;" @scroll="handleResultsScroll($event)">
+
+      <!-- Results header bar -->
+      <div x-show="semanticMode" style="padding:0 12px;"><div data-model-gate="clap"></div></div>
+      <div id="results-header">
+        <span>
+          <span x-show="!loading" x-text="total + ' results'"></span>
+          <span x-show="loading" style="color:var(--accent)">Searching…</span>
+          <template x-if="filterTags.length">
+            <span> — tags: <span x-text="filterTags.join(', ')"></span></span>
+          </template>
+        </span>
+        <span style="color:var(--muted);font-size:10px;" x-show="semanticMode && query">
+          <span x-text="$store.models.isMissing('clap') ? 'Keyword results (AI model not downloaded)' : '✦ Semantic mode'"></span>
+        </span>
+        <!-- Sort controls -->
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+          <span style="font-size:10px;color:var(--muted);">Sort:</span>
+          <button class="sort-col-btn" :class="{active: sortOrder==='date_desc'||sortOrder==='date_asc'}"
+            @click="sortOrder = sortOrder==='date_desc' ? 'date_asc' : 'date_desc'; search()">
+            Date <span x-text="sortOrder==='date_desc' ? '↓' : sortOrder==='date_asc' ? '↑' : ''"></span>
+          </button>
+          <button class="sort-col-btn" :class="{active: sortOrder==='name_asc'||sortOrder==='name_desc'}"
+            @click="sortOrder = sortOrder==='name_asc' ? 'name_desc' : 'name_asc'; search()">
+            Name <span x-text="sortOrder==='name_asc' ? '↑' : sortOrder==='name_desc' ? '↓' : ''"></span>
+          </button>
+          <button class="sort-col-btn" :class="{active: sortOrder==='duration_asc'||sortOrder==='duration_desc'}"
+            @click="sortOrder = sortOrder==='duration_asc' ? 'duration_desc' : 'duration_asc'; search()">
+            Duration <span x-text="sortOrder==='duration_asc' ? '↑' : sortOrder==='duration_desc' ? '↓' : ''"></span>
+          </button>
+          <button class="sort-col-btn" :class="{active: sortOrder==='size_desc'}"
+            @click="sortOrder = 'size_desc'; search()">
+            Size
+          </button>
+          <button class="sort-col-btn" :class="{active: sortOrder==='modified_desc'||sortOrder==='modified_asc'}"
+            @click="sortOrder = sortOrder==='modified_desc' ? 'modified_asc' : 'modified_desc'; search()">
+            Modified <span x-text="sortOrder==='modified_desc' ? '↓' : sortOrder==='modified_asc' ? '↑' : ''"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk action toolbar — visible when rows are selected -->
+      <div class="bulk-bar" x-show="Object.keys(selectedMap).length > 0" x-cloak>
+        <span class="bulk-bar-label" x-text="Object.keys(selectedMap).length + ' selected'"></span>
+        <button class="bulk-btn accent" @click="bulkTagOpen()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Add Tags
+        </button>
+        <button class="bulk-btn" @click="selectedMap = {}">Clear</button>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div x-show="loading">
+        <template x-for="n in [1,2,3,4,5,6,7,8]" :key="n">
+          <div class="skeleton skeleton-row"></div>
+        </template>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        class="empty-state"
+        x-show="!loading && !results.length"
+      >
+        <div class="empty-state-icon">🔊</div>
+        <div>No sounds found</div>
+        <div style="font-size:11px;color:var(--muted);" x-show="!query && !filterTags.length">Use <strong>Reindex</strong> to scan your library</div>
+      </div>
+
+      <!-- Result rows -->
+      <div x-show="!loading">
+        <!-- Top spacer for virtual scroll -->
+        <div :style="'height:' + (visibleStart * ROW_HEIGHT) + 'px'"></div>
+        <template x-for="(sound, idx) in visibleResults()" :key="sound.id">
+          <div
+            class="result-row"
+            :class="{
+              selected: selectedSound && selectedSound.id === sound.id,
+              'multi-checked': selectedMap[sound.id],
+              'any-selected': Object.keys(selectedMap).length > 0
+            }"
+            :data-sound-id="sound.id"
+            :data-sound-path="sound.path"
+            @click="selectSound(sound, idx + visibleStart)"
+          >
+            <!-- Multi-select checkbox -->
+            <input type="checkbox" class="row-checkbox"
+              :checked="!!selectedMap[sound.id]"
+              @click.stop
+              @change.stop="selectedMap[sound.id] ? (delete selectedMap[sound.id], selectedMap = {...selectedMap}) : (selectedMap = {...selectedMap, [sound.id]: true})"
+            />
+            <!-- Artwork with overlay + centered play button (no label pip — label is on right) -->
+            <div class="artwork-wrap" style="width:44px;height:44px;border-radius:4px;">
+              <img :src="'/api/sounds/' + sound.id + '/artwork'" alt=""
+                onerror="this.style.display='none'"
+                onload="this.style.display='block'"
+                style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+              <div class="artwork-overlay"></div>
+              <button class="artwork-play-btn" :class="{ playing: sound.id === playingId }"
+                :id="'row-play-' + sound.id"
+                @click.stop="window.rowTogglePlay(sound.id)">
+                <svg x-show="sound.id !== playingId" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg x-show="sound.id === playingId" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              </button>
+            </div>
+
+            <div class="result-filename">
+              <!-- Filename + extension badge — shared component -->
+              <div style="display:flex;align-items:center;gap:6px;min-width:0;"
+                   x-html="soundNameBadge(sound)"></div>
+              <!-- Subfolder — shared component -->
+              <span x-html="soundSubfolder(sound)"></span>
+              <!-- Inline waveform below name — loads on hover (Alpine binding stays here) -->
+              <div class="mini-wave" :id="'mw-' + sound.id" @click.stop
+                @mouseenter="miniWsLoad(sound)"
+                style="height:24px;margin-top:3px;opacity:.7;border-radius:3px;overflow:hidden;">
+              </div>
+            </div>
+
+            <!-- Tags — shared component -->
+            <span style="display:contents" x-html="soundTagsHTML(sound)"></span>
+
+            <!-- Semantic score badge — only in semantic mode with a real score -->
+            <span
+              x-show="semanticMode && sound._semanticScore > 0.01"
+              class="semantic-score-badge"
+              :style="'background:' + scoreColor(sound._semanticScore)"
+            >
+              <span x-text="Math.round((sound._semanticScore||0)*100) + '%'"></span>
+            </span>
+
+            <!-- Duration -->
+            <span class="result-duration" :class="durClass(sound.duration)" x-text="formatDuration(sound.duration)"></span>
+
+            <!-- Size -->
+            <span class="result-size" x-text="formatSize(sound.size)"></span>
+
+            <!-- Modified / indexed date -->
+            <span class="result-timestamp"
+              :title="(sound.file_modified_at ? 'Modified: ' + formatDate(sound.file_modified_at) + '\n' : '') + 'Indexed: ' + formatDate(sound.indexed_at)"
+              x-text="timeAgo(sound.file_modified_at || sound.indexed_at)"></span>
+
+            <!-- Add to Project button -->
+            <div class="add-to-project-wrap" @click.stop>
+              <button class="add-project-btn" title="Add to project" @click.stop="$event.currentTarget.nextElementSibling.classList.toggle('open')">+📁</button>
+              <div class="project-dropdown">
+                <template x-if="projects && projects.length">
+                  <template x-for="p in projects" :key="p.id">
+                    <div class="project-dropdown-item" @click="addSoundToProject(p.id, sound)">
+                      <span :style="'color:' + p.color">●</span>
+                      <span x-text="p.name"></span>
+                    </div>
+                  </template>
+                </template>
+                <div x-show="!projects || !projects.length" class="project-dropdown-item" style="color:var(--muted);cursor:default">No projects yet</div>
+                <div class="project-dropdown-item project-dropdown-new" @click="newProject()">+ New project</div>
+              </div>
+            </div>
+
+            <!-- Row actions: copy path, open in Finder, rename, delete -->
+            <div class="row-actions" @click.stop>
+              <!-- Copy path -->
+              <button class="row-action-btn" :id="'ra-copy-' + sound.id"
+                title="Copy file path"
+                @click.stop="rowCopyPath(sound, $event)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <!-- Open in Finder -->
+              <button class="row-action-btn" title="Show in Finder"
+                @click.stop="rowReveal(sound)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </button>
+              <!-- Rename -->
+              <button class="row-action-btn" title="Rename or move file"
+                @click.stop="rowRename(sound)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <!-- Delete -->
+              <button class="row-action-btn danger" title="Move to Trash"
+                @click.stop="rowDelete(sound)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+
+            <!-- Label indicator (color dot — click to cycle) -->
+            <button class="row-label-btn" :class="{ labeled: sound.label > 0 }"
+              @click.stop="window.rowCycleLabel(sound.id)"
+              title="Color label"
+              :style="sound.label > 0 ? 'color:' + (['','#ff3b30','#ff9f0a','#ffd60a','#30d158','#0a84ff'][sound.label||0]||'') : 'color:var(--border)'">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4.5"/></svg>
+            </button>
+
+            <!-- Star rating (1–5) -->
+            <div class="star-rating" @click.stop>              <template x-for="n in [1,2,3,4,5]" :key="n">
+                <button
+                  class="star-btn"
+                  :class="{ filled: (sound.rating || 0) >= n }"
+                  :title="n + ' star' + (n > 1 ? 's' : '')"
+                  @click.stop="setRating(sound, (sound.rating === n) ? 0 : n)"
+                >★</button>
+              </template>
+            </div>
+          </div>
+        </template>
+        <!-- Bottom spacer for virtual scroll -->
+        <div :style="'height:' + (Math.max(0, results.length - visibleStart - VISIBLE_ROWS) * ROW_HEIGHT) + 'px'"></div>
+      </div>
+
+    </div><!-- /results-area -->
+
+  </div><!-- /main-body (library tab) -->
+
+
+  <!-- ═══════════════════════════════════════════ AI DASHBOARD TAB -->
+  <div id="dashboard-tab" x-show="activeTab === 'dashboard'" class="tab-content">
+
+    <!-- Stats bar — 6 metric cards -->
+    <div class="dashboard-grid">
+      <div class="stat-card">
+        <div class="stat-value" x-text="dashboardStats.total"></div>
+        <div class="stat-label">Total Sounds</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" x-text="formatDuration(dashboardStats.totalDuration)"></div>
+        <div class="stat-label">Total Duration</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value text-accent" x-text="dashboardStats.sfxCount"></div>
+        <div class="stat-label">SFX Files</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--blue)" x-text="dashboardStats.musicCount"></div>
+        <div class="stat-label">Music Files</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:var(--ai)" x-text="dashboardStats.withEmbeddings"></div>
+        <div class="stat-label">AI Embedded</div>
+      </div>
+      <div class="stat-card" style="display:none"><!-- stems unavailable in standalone v1 -->
+        <div class="stat-value" style="color:var(--green)" x-text="dashboardStats.withStems"></div>
+        <div class="stat-label">With Stems</div>
+      </div>
+    </div>
+
+    <!-- Collection breakdown cards -->
+    <section class="dashboard-section">
+      <h3 class="dashboard-section-title">Collections</h3>
+      <div class="collection-cards-grid">
+        <template x-for="col in collectionBreakdown" :key="col.name">
+          <div class="collection-card" @click="switchTab('library'); query = col.name; semanticMode = false; activeFolderPath = null; search()">
+            <div class="collection-card-bar" :style="'background:' + collectionColor(col.name)"></div>
+            <div class="collection-card-body">
+              <div class="collection-card-name" x-text="col.name"></div>
+              <div class="collection-card-meta">
+                <span x-text="col.count + ' files'"></span>
+                <span x-text="formatDuration(col.avgDuration) + ' avg'"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div
+          x-show="!collectionBreakdown || collectionBreakdown.length === 0"
+          style="color:var(--muted);font-size:12px;padding:8px 0;"
+        >No collections indexed yet.</div>
+      </div>
+    </section>
+
+    <!-- Two-column: Recent + Needs Attention -->
+    <div class="dashboard-two-col">
+      <section class="dashboard-section" style="margin-bottom:0;">
+        <h3 class="dashboard-section-title">Recent Additions</h3>
+        <template x-for="s in recentSounds" :key="s.id">
+          <div class="recent-sound-row" @click="switchTab('library'); selectSound(s)">
+            <span style="display:contents" x-html="artworkImg(s.id, true)"></span>
+            <span class="badge" :class="badgeClass(s.extension)" x-text="s.extension ? s.extension.toUpperCase() : '?'"></span>
+            <span x-text="s.filename" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
+            <span class="text-muted" style="font-size:11px;" x-text="formatDuration(s.duration)"></span>
+          </div>
+        </template>
+        <div x-show="!recentSounds || recentSounds.length === 0" class="text-muted" style="font-size:12px;padding:8px 0;">No recent sounds.</div>
+      </section>
+
+      <section class="dashboard-section" style="margin-bottom:0;">
+        <h3 class="dashboard-section-title">
+          Needs Attention <span class="text-muted">(no tags)</span>
+        </h3>
+        <template x-for="s in needsAttention" :key="s.id">
+          <div class="needs-attention-row" @click="switchTab('library'); selectSound(s)">
+            <span x-text="s.filename" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;"></span>
+            <span class="text-muted" style="font-size:11px;" x-text="s.collection"></span>
+          </div>
+        </template>
+        <div x-show="!needsAttention || needsAttention.length === 0" class="text-muted" style="font-size:12px;padding:8px 0;">All sounds have tags!</div>
+      </section>
+    </div>
+
+    <!-- ═══ Sonic Distribution Blueprint ══════════════════════════ -->
+    <section class="dashboard-section" style="margin-top:16px;">
+      <h3 class="dashboard-section-title">Sonic Distribution Blueprint</h3>
+      <div data-model-gate="clap"></div>
+      <div id="sonic-blueprint"><div style="color:var(--muted);font-size:12px;">Loading…</div></div>
+      <div id="sfx-category-results" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- ═══ Emotion Matrix (Russell Circumplex) ════════════════════ -->
+    <section class="dashboard-section" style="margin-top:16px;">
+      <h3 class="dashboard-section-title">Emotion Matrix
+        <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;"> — drag to search by mood</span>
+      </h3>
+      <div data-model-gate="clap"></div>
+      <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex-shrink:0;">
+          <canvas id="mood-canvas" style="cursor:crosshair;border-radius:50%;display:block;"></canvas>
+          <div id="mood-query-label" style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px;font-style:italic;min-height:14px;"></div>
+        </div>
+        <div style="flex:1;min-width:220px;">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Matches</div>
+          <div id="mood-results">
+            <div style="color:var(--muted);font-size:12px;">Click or drag on the wheel to search by emotion.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Tag Cloud ═══════════════════════════════════════════════ -->
+    <section class="dashboard-section" style="margin-top:16px;">
+      <h3 class="dashboard-section-title">Tag Cloud</h3>
+      <div id="tag-cloud" style="display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;">
+        <div style="color:var(--muted);font-size:12px;">Loading…</div>
+      </div>
+    </section>
+
+    <!-- ═══ Collection Breakdown ════════════════════════════════════ -->
+    <section class="dashboard-section" style="margin-top:16px;">
+      <h3 class="dashboard-section-title">Collection Breakdown</h3>
+      <div id="collection-breakdown-list" style="display:flex;flex-direction:column;gap:6px;">
+        <div style="color:var(--muted);font-size:12px;">Loading…</div>
+      </div>
+    </section>
+
+    <!-- Background Jobs section -->
+    <section class="dashboard-section" style="margin-top:16px;">
+      <h3 class="dashboard-section-title">Background Jobs</h3>
+
+      <!-- Indexing job (details live in the card at the top of the sidebar) -->
+      <div class="job-item" x-show="indexing">
+        <div class="job-dot running"></div>
+        <span style="flex:1;font-size:12px;" x-text="indexPhaseLabel"></span>
+        <span class="text-muted" style="font-size:11px;" x-text="indexIndeterminate ? (U.num(indexProgress.discovered) + ' found') : (U.num(indexProgress.done) + ' / ' + U.num(indexProgress.total))"></span>
+      </div>
+
+      <!-- UMAP / radar job -->
+      <div class="job-item" x-show="radarStatus === 'generating' || radarStatus === 'computing'">
+        <div class="job-dot running"></div>
+        <span style="flex:1;font-size:12px;">Computing radar</span>
+        <span class="text-muted" style="font-size:11px;" x-text="(radarProgress.done||0) + '/' + (radarProgress.total||0)"></span>
+      </div>
+
+      <!-- Idle state -->
+      <div class="job-item" x-show="!indexing && radarStatus !== 'generating' && radarStatus !== 'computing'">
+        <div class="job-dot idle"></div>
+        <span class="text-muted" style="font-size:12px;">All jobs complete</span>
+      </div>
+    </section>
+
+  </div><!-- /dashboard-tab -->
+
+
+  <!-- ═══════════════════════════════════════════════ RADAR TAB -->
+  <div id="radar-tab" x-show="activeTab === 'radar'">
+
+    <!-- Radar panel header -->
+    <div id="radar-panel-header" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--panel);">
+      <div>
+        <span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Acoustic Radar</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:8px;">Scroll to zoom · drag to pan · lasso on empty space · click dot to play</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span x-show="radarStatus === 'generating' || radarStatus === 'computing'" style="font-size:11px;color:var(--accent);">
+          Analysing… <span x-text="(radarProgress.done||0) + '/' + (radarProgress.total||0)"></span>
+        </span>
+        <span x-show="radarError && radarStatus !== 'generating' && radarStatus !== 'computing'" style="font-size:11px;color:var(--red);" x-text="'Radar failed: ' + radarError"></span>
+        <span x-show="$store.models.isOptimizing('clap')" style="font-size:11px;color:var(--muted);">Optimizing for this Mac…</span>
+        <div data-model-gate="clap" style="margin:0;"></div>
+        <button
+          class="ctrl-btn"
+          style="font-size:11px;"
+          x-show="!$store.models.isMissing('clap') && (radarStatus === 'none' || radarStatus === 'not_started' || radarStatus === 'computing')"
+          :disabled="radarGenerating"
+          @click="generateRadar()"
+        >
+          <span x-show="radarGenerating" class="spinner"></span>
+          <span x-text="radarError ? 'Retry' : radarStatus === 'computing' ? 'Resume' : 'Generate'"></span>
+        </button>
+        <button
+          class="ctrl-btn"
+          style="font-size:11px;"
+          x-show="radarStatus === 'ready' && !$store.models.isMissing('clap')"
+          :disabled="radarGenerating"
+          @click="generateRadar()"
+        >
+          <span x-show="radarGenerating" class="spinner"></span>Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Re-embed notice: embeddings only count when produced by the current model -->
+    <div x-show="radarIncomplete && !radarError && radarStatus !== 'generating' && radarStatus !== 'computing'" x-cloak
+         style="padding:6px 14px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);background:var(--panel);">
+      AI index is incomplete for the current model
+      <span x-show="radarProgress.total > 0" x-text="'(' + (radarProgress.done||0) + ' / ' + radarProgress.total + ' sounds embedded)'"></span>
+      — press Generate to build it. Sounds are only counted once embedded with the current model.
+    </div>
+
+    <!-- Body: sidebar + canvas area -->
+    <div class="radar-body">
+
+      <!-- Collection filter sidebar -->
+      <div id="radar-sidebar">
+        <div class="radar-sb-title">Collections</div>
+        <div class="radar-sb-item radar-sb-all active" id="radar-sb-all" onclick="radarSidebarSelectAll()">
+          <span class="radar-sb-dot" style="background:var(--muted)"></span>
+          <span>All</span>
+        </div>
+        <div id="radar-sb-list"><!-- populated by radar.js after points load --></div>
+      </div>
+
+      <!-- Canvas + similarity strip -->
+      <div class="radar-main" id="radar-main">
+        <canvas id="radar-canvas" style="flex:1;min-height:80px;width:100%;display:block;cursor:crosshair;"></canvas>
+
+        <!-- Resize handle between canvas and similarity strip -->
+        <div class="radar-resize-handle" id="radar-resize-handle" title="Drag to resize"></div>
+
+        <!-- Similarity strip — hidden until a point is selected -->
+        <div id="radar-sim-panel" style="display:none;flex-direction:column;flex-shrink:0;border-top:none;background:var(--panel);height:220px;min-height:80px;max-height:60vh;">
+          <div class="sim-header">
+            <span class="sim-title">Similarity Neighbors</span>
+            <div class="sim-controls">
+              <span class="sim-label">Rows each side</span>
+              <input type="range" min="2" max="50" value="8" class="sim-slider"
+                     oninput="updateSimilaritySlider(this.value)">
+              <span id="sim-n-label" class="sim-n-label">8</span>
+            </div>
+            <span class="sim-hint">↑ more similar &nbsp;·&nbsp; ↓ less similar</span>
+          </div>
+          <div id="radar-similarity-strip" class="sim-strip"></div>
+        </div>
+      </div>
+
+    </div><!-- /radar-body -->
+
+  </div><!-- /radar-tab -->
+
+
+  <!-- ═══════════════════════════════════════════════ PROJECTS TAB -->
+  <div id="projects-tab" x-show="activeTab === 'projects'" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+
+    <!-- Top bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--panel);">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Projects</span>
+      <button class="ctrl-btn" @click="newProject()" style="font-size:11px;">+ New Project</button>
+    </div>
+
+    <div style="display:flex;flex:1;overflow:hidden;">
+
+      <!-- Left: project list -->
+      <div style="width:220px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:10px 8px;background:var(--sidebar);">
+        <template x-for="p in projects" :key="p.id">
+          <div
+            @click="openProject(p.id)"
+            style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;margin-bottom:2px;transition:background .1s;"
+            :style="activeProjectId === p.id ? 'background:rgba(228,122,42,.15);' : 'background:transparent;'"
+            @mouseenter="$el.style.background = activeProjectId===p.id ? 'rgba(228,122,42,.15)' : 'rgba(255,255,255,.04)'"
+            @mouseleave="$el.style.background = activeProjectId===p.id ? 'rgba(228,122,42,.15)' : 'transparent'"
+          >
+            <span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;" :style="'background:' + p.color"></span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);" x-text="p.name"></div>
+              <div style="font-size:10px;color:var(--muted);" x-text="p.sound_count + ' sound' + (p.sound_count===1?'':'s')"></div>
+            </div>
+            <button
+              style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 3px;border-radius:3px;flex-shrink:0;opacity:.4;transition:opacity .15s;"
+              @mouseenter="$el.style.opacity='1';$el.style.color='#d05454'"
+              @mouseleave="$el.style.opacity='.4';$el.style.color='var(--muted)'"
+              @click.stop="deleteProject(p.id)"
+              title="Delete project"
+            >×</button>
+          </div>
+        </template>
+        <div x-show="projects.length === 0" style="font-size:12px;color:var(--muted);padding:20px 8px;text-align:center;line-height:1.6;">
+          No projects yet.<br>Create one to start<br>grouping sounds.
+        </div>
+      </div>
+
+      <!-- Right: sounds in selected project -->
+      <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+
+        <!-- Project header -->
+        <div x-show="activeProjectId !== null" style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <template x-if="activeProject">
+            <span style="width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block;" :style="'background:' + activeProject.color"></span>
+          </template>
+          <span style="font-size:13px;font-weight:600;color:var(--text);" x-text="activeProject ? activeProject.name : ''"></span>
+          <span style="font-size:11px;color:var(--muted);" x-text="projectSounds.length + ' sound' + (projectSounds.length===1?'':'s')"></span>
+          <div style="flex:1;"></div>
+        </div>
+
+        <!-- Empty state: no project selected -->
+        <div x-show="activeProjectId === null" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span style="font-size:13px;">Select a project to view its sounds</span>
+        </div>
+
+        <!-- Loading state -->
+        <div x-show="activeProjectId !== null && projectSoundsLoading" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px;gap:8px;">
+          <span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Loading…
+        </div>
+
+        <!-- Sounds list -->
+        <div x-show="activeProjectId !== null && !projectSoundsLoading" style="flex:1;overflow-y:auto;">
+          <div x-show="projectSounds.length === 0 && activeProjectId !== null" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:8px;color:var(--muted);font-size:13px;">
+            <span>No sounds in this project yet.</span>
+            <span style="font-size:11px;">Use the +📁 button on any Library result to add sounds.</span>
+          </div>
+          <template x-for="sound in projectSounds" :key="sound.id">
+            <div
+              class="proj-sound-row"
+              :class="{ selected: selectedSound && selectedSound.id === sound.id }"
+              @click="selectSound(sound)"
+            >
+              <!-- Meta: name + format pill + subfolder — shared components -->
+              <div class="proj-sound-meta">
+                <div style="display:flex;align-items:center;gap:5px;min-width:0;">
+              <!-- Artwork with overlay + centered play button (small) -->
+              <div class="artwork-wrap" style="width:28px;height:28px;border-radius:3px;flex-shrink:0;">
+                <img :src="'/api/sounds/' + sound.id + '/artwork'" alt=""
+                  onerror="this.style.display='none'"
+                  onload="this.style.display='block'"
+                  style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+                <div class="artwork-overlay"></div>
+                <button class="artwork-play-btn" :class="{ playing: sound.id === playingId }"
+                  :id="'row-play-' + sound.id"
+                  @click.stop="window.rowTogglePlay(sound.id)"
+                  style="width:18px;height:18px;">
+                  <svg x-show="sound.id !== playingId" width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <svg x-show="sound.id === playingId" width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </button>
+              </div>
+                  <span class="proj-sound-name" x-text="sound.filename"></span>
+                  <span :class="badgeClass(sound.extension)" x-text="sound.extension || '?'" style="flex-shrink:0;font-size:9px;padding:1px 4px;"></span>
+                </div>
+                <span class="proj-sound-sub" x-text="sound.folder_path || sound.collection || ''"></span>
+              </div>
+
+              <!-- Inline waveform -->
+              <div
+                class="proj-waveform"
+                :id="'proj-wave-' + sound.id"
+                @click.stop
+              ></div>
+
+              <!-- Duration + size -->
+              <span class="result-duration" :class="durClass(sound.duration)" x-text="formatDuration(sound.duration)" style="flex-shrink:0;"></span>
+              <span class="result-size" style="flex-shrink:0;" x-text="formatSize(sound.size)"></span>
+
+              <!-- Remove -->
+              <button
+                class="proj-remove-btn"
+                @click.stop="removeFromProject(activeProjectId, sound.id)"
+                title="Remove from project"
+              >✕</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div><!-- /projects-tab -->
+
+  </div><!-- /tab-content-column -->
+
+  <!-- ═══ SHARED PLAYER PANEL — always visible, shared across all tabs ═══ -->
+  <div id="player-panel" style="display:flex;width:280px;flex-shrink:0;border-left:1px solid var(--border);flex-direction:column;overflow:hidden;min-height:0;background:var(--panel);">
+
+    <!-- Empty state -->
+    <div id="player-empty-state" class="player-empty-state" style="display:flex;">
+      <div class="player-empty-state-icon">♫</div>
+      <div class="player-empty-state-text">Select a sound to preview</div>
+    </div>
+
+    <!-- Player content (shown when a sound is selected) -->
+    <div id="player-content" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:24px;">
+
+      <!-- Player header / filename -->
+      <div class="player-section" style="border-bottom:1px solid var(--border);padding:10px 12px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <!-- Artwork thumbnail -->
+          <img id="player-artwork" src="" alt=""
+               style="width:52px;height:52px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--panel-raised);display:none;"
+               onerror="this.style.display='none'">
+          <div style="min-width:0;flex:1;">
+            <div id="player-filename" style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+            <div id="player-collection" style="font-size:10px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+              <button id="copy-path-btn" class="icon-btn copy-path-btn" onclick="copyPath()" title="Copy file path">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span class="copy-label">Copy</span>
+                <span class="copied-label">Copied!</span>
+              </button>
+              <button id="reveal-finder-btn" class="icon-btn copy-path-btn" onclick="revealInFinder()" title="Reveal in Finder">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span>Finder</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waveform -->
+      <div class="player-section" style="padding-bottom:4px;">
+        <div id="waveform-container">
+          <div id="waveform"></div>
+          <div id="in-marker"  style="left:0;"></div>
+          <div id="out-marker" style="left:100%;"></div>
+          <div id="region-overlay" style="left:0;right:0;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <span id="player-time" style="font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;">0:00 / —</span>
+          <span id="zoom-indicator" class="zoom-indicator"></span>
+          <div id="inout-readout" style="font-size:10px;color:var(--muted);display:flex;gap:10px;font-variant-numeric:tabular-nums;">
+            <span>In: <span class="inout-in-time">—</span></span>
+            <span>Out: <span class="inout-out-time">—</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playback controls -->
+      <div class="player-section">
+        <div class="player-controls">
+          <button id="play-btn" class="play-btn" onclick="playerPlay()">▶</button>
+          <button class="ctrl-btn" onclick="playerStop()">■</button>
+          <button id="loop-btn" class="ctrl-btn" onclick="toggleLoop()" title="Loop region">⟳ Loop</button>
+        </div>
+        <div class="volume-row">
+          <span class="volume-icon" id="volume-icon" onclick="toggleMute()" title="Mute">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path id="vol-wave1" d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path id="vol-wave2" d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </span>
+          <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.8"
+                 oninput="setVolume(this.value)" title="Volume">
+          <span id="volume-pct" class="volume-pct">80%</span>
+        </div>
+        <button id="export-btn" class="export-btn" onclick="exportClip()" title="Export in/out region as lossless WAV (Enter or ⌘E)">⭳ Export clip</button>
+        <div id="export-result" class="export-result"></div>
+        <div id="status-toast" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
+      </div>
+
+      <!-- FX Dock -->
+      <div class="player-section fx-dock-section">
+        <div class="fx-dock-label">FX</div>
+        <div class="fx-dock">
+          <button class="fx-btn" :class="{active: activeFX==='none'}"      @click="setActiveFX('none')">Dry</button>
+          <button class="fx-btn" :class="{active: activeFX==='underwater'}" @click="setActiveFX('underwater')" title="Lowpass 450 Hz">Underwater</button>
+          <button class="fx-btn" :class="{active: activeFX==='telephone'}"  @click="setActiveFX('telephone')"  title="Bandpass 1.5 kHz">Phone</button>
+          <button class="fx-btn" :class="{active: activeFX==='clubdrop'}"   @click="setActiveFX('clubdrop')"   title="Sweep LPF 20kHz → 300Hz">Club Drop</button>
+          <button class="fx-btn" :class="{active: activeFX==='reverb'}"     @click="setActiveFX('reverb')"     title="Hall reverb 60% wet">Reverb</button>
+          <button class="fx-btn" :class="{active: activeFX==='lofi'}"       @click="setActiveFX('lofi')"       title="Lo-fi vinyl distortion">Lo-Fi</button>
+          <button class="fx-btn" :class="{active: activeFX==='stutter'}"    @click="setActiveFX('stutter')"    title="Gated stutter">Stutter</button>
+        </div>
+      </div>
+
+      <!-- Label & Rating strip -->
+      <div class="player-section" id="player-label-rating" style="display:none;padding:8px 14px;border-top:1px solid var(--border);gap:10px;flex-wrap:wrap;">
+        <!-- Label picker -->
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px;">Label</span>
+          <button id="plr-l0" class="plr-dot-btn" onclick="playerSetLabel(0)" title="No label" style="border-color:var(--muted);"><span style="width:12px;height:12px;border-radius:50%;display:block;background:transparent;border:1.5px solid var(--muted);"></span></button>
+          <button id="plr-l1" class="plr-dot-btn" onclick="playerSetLabel(1)" title="Red">    <span style="width:12px;height:12px;border-radius:50%;display:block;background:#ff3b30;"></span></button>
+          <button id="plr-l2" class="plr-dot-btn" onclick="playerSetLabel(2)" title="Orange"> <span style="width:12px;height:12px;border-radius:50%;display:block;background:#ff9f0a;"></span></button>
+          <button id="plr-l3" class="plr-dot-btn" onclick="playerSetLabel(3)" title="Yellow"> <span style="width:12px;height:12px;border-radius:50%;display:block;background:#ffd60a;"></span></button>
+          <button id="plr-l4" class="plr-dot-btn" onclick="playerSetLabel(4)" title="Green">  <span style="width:12px;height:12px;border-radius:50%;display:block;background:#30d158;"></span></button>
+          <button id="plr-l5" class="plr-dot-btn" onclick="playerSetLabel(5)" title="Blue">   <span style="width:12px;height:12px;border-radius:50%;display:block;background:#0a84ff;"></span></button>
+        </div>
+        <!-- Star rating -->
+        <div style="display:flex;align-items:center;gap:3px;">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px;">Rating</span>
+          <template x-for="n in [1,2,3,4,5]" :key="n">
+            <button
+              class="plr-star-btn"
+              :class="{filled: selectedSound && (selectedSound.rating || 0) >= n}"
+              @click="selectedSound && setRating(selectedSound, selectedSound.rating === n ? 0 : n)"
+              x-text="'★'"
+            ></button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Metadata grid — collapsible -->
+      <div class="player-collapsible-header" data-start-open="true" style="border-bottom:none;">
+        <span class="player-section-label" style="margin:0;">Info</span>
+        <span class="collapse-chevron">▶</span>
+      </div>
+      <div class="player-collapsible-body" style="padding:4px 14px 10px;">
+        <div id="player-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11px;">
+          <!-- populated by player.js -->
+        </div>
+      </div>
+
+      <!-- Tags — collapsible -->
+      <div class="player-collapsible-header" data-start-open="true">
+        <span class="player-section-label" style="margin:0;">Tags</span>
+        <span class="collapse-chevron">▶</span>
+      </div>
+      <div class="player-collapsible-body" style="padding:8px 14px;">
+        <div id="player-tags" class="tags-wrap"></div>
+        <div class="tag-input-wrap">
+          <input id="player-tag-input" type="text" placeholder="Add tag…" autocomplete="off" />
+          <button onclick="addTagFromInput()">Add</button>
+        </div>
+      </div>
+
+      <!-- AI Suggestions — collapsible -->
+      <div class="player-collapsible-header" data-start-open="true">
+        <span class="player-section-label" style="margin:0;">AI Suggestions <span style="font-weight:normal;font-style:italic;font-size:10px;color:var(--ai);">· click to confirm</span></span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="refresh-tags-btn" class="ctrl-btn" style="font-size:10px;padding:2px 7px;" onclick="refreshSuggestedTags()">↺</button>
+          <span class="collapse-chevron">▶</span>
+        </div>
+      </div>
+      <div class="player-collapsible-body" style="padding:8px 14px;">
+        <div data-model-gate="ast,clap"></div>
+        <div id="player-suggested-tags" class="tags-wrap" style="gap:6px;"></div>
+      </div>
+
+      <!-- Stems — collapsible (hidden: stems are deferred in standalone v1) -->
+      <div class="player-collapsible-header" data-start-open="false" style="display:none">
+        <span class="player-section-label" style="margin:0;">Stems</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="split-stems-btn" class="ctrl-btn" style="font-size:11px;" onclick="splitStems()">Split Stems</button>
+          <span class="collapse-chevron">▶</span>
+        </div>
+      </div>
+      <div class="player-collapsible-body" style="padding:0 14px 8px;display:none;">
+        <div id="stems-container">
+          <p style="color:var(--muted);font-size:11px;margin:8px 0 0;">No stems yet.</p>
+        </div>
+      </div>
+
+    </div><!-- /player-content -->
+
+  </div><!-- /player-panel -->
+
+  </div><!-- /content-wrapper -->
+
+
+  <!-- ══════════════════════════════════════ INDEX MODAL -->
+  <div class="modal-backdrop" x-show="showIndexModal" @click.self="showIndexModal = false" x-cloak>
+    <div class="modal-box">
+      <div class="modal-title">Index / Reindex Library</div>
+
+      <template x-for="(folder, i) in indexFolders" :key="folder._uid || i">
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input
+            class="modal-input"
+            style="margin:0;flex:1;"
+            type="text"
+            placeholder="/path/to/library"
+            x-model="indexFolders[i].path"
+          />
+          <select class="filter-select" style="width:90px;margin:0;" x-model="indexFolders[i].source">
+            <option value="sfx">SFX</option>
+            <option value="music">Music</option>
+            <option value="ambience">Ambience</option>
+          </select>
+          <button
+            class="modal-btn"
+            style="padding:4px 8px;"
+            @click="removeIndexFolder(i)"
+            x-show="indexFolders.length > 1"
+          >✕</button>
+        </div>
+      </template>
+
+      <button class="ctrl-btn" @click="addIndexFolder()" style="font-size:11px;margin-top:2px;">+ Add folder</button>
+
+      <div class="idx-note">
+        Indexing adds new files and refreshes existing ones. It never deletes anything, and your tags, favorites
+        and ratings are never touched. You can cancel at any time; files already indexed are kept.
+      </div>
+
+      <div class="modal-footer">
+        <button class="modal-btn" @click="showIndexModal = false">Close</button>
+        <button
+          class="modal-btn primary"
+          :disabled="indexing"
+          @click="startReindex()"
+        ><span x-show="indexing" class="spinner"></span><span x-text="indexing ? 'Indexing in progress…' : 'Start Indexing'"></span></button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ══════════════════════════════════════ REMOVE FROM LIBRARY MODAL -->
+  <div class="modal-backdrop" x-show="removeDlg.open" @click.self="!removeDlg.busy && (removeDlg.open = false)" @keydown.escape.window="!removeDlg.busy && (removeDlg.open = false)" x-cloak>
+    <div class="modal-box" style="min-width:460px;max-width:560px;">
+      <div class="modal-title" x-text="removeDlg.title"></div>
+      <div x-show="removeDlg.loading" class="rm-dlg-note">Checking what will be affected…</div>
+      <div x-show="removeDlg.error" class="rm-dlg-fail" x-text="removeDlg.error"></div>
+
+      <template x-if="removeDlg.preview && !removeDlg.result">
+        <div>
+          <div class="rm-dlg-path" :title="removeDlg.preview.path" x-text="ellipsizeMiddle(removeDlg.preview.path)"></div>
+          <div class="rm-dlg-note">
+            <strong x-text="U.num(removeDlg.preview.sounds)"></strong> sound<span x-show="removeDlg.preview.sounds !== 1">s</span>,
+            <strong x-text="(removeDlg.preview.bytes / 1048576).toFixed(1) + ' MB'"></strong> in total.
+          </div>
+          <div class="rm-dlg-note">
+            <strong>Remove from library</strong> removes these entries together with their tags, favorites, ratings,
+            embeddings and project memberships. Files on disk are NOT touched.
+          </div>
+          <div class="rm-dlg-note" x-show="removeDlg.preview.is_root">
+            This is an indexed root folder: it will also be forgotten so re-indexing does not bring it back.
+            The folder itself is never moved to the Trash; only its indexed audio files can be.
+          </div>
+          <label class="rm-dlg-trash">
+            <input type="checkbox" x-model="removeDlg.deleteFiles" :disabled="removeDlg.busy" />
+            <span>Also move the files to the Trash
+              (<span x-text="removeDlgNoun(removeDlg.preview.sounds)"></span>,
+              <span x-text="(removeDlg.preview.bytes / 1048576).toFixed(1) + ' MB'"></span>).
+              Only indexed audio files are moved; other files and the folder stay.</span>
+          </label>
+        </div>
+      </template>
+
+      <template x-if="removeDlg.result">
+        <div>
+          <div class="rm-dlg-note" x-text="removeDlg.result.msg"></div>
+          <div class="rm-dlg-fail">
+            <template x-for="f in removeDlg.result.failed" :key="f.path"><div x-text="f.path + ' — ' + f.reason"></div></template>
+          </div>
+        </div>
+      </template>
+
+      <div class="modal-footer">
+        <button class="modal-btn" :disabled="removeDlg.busy" @click="removeDlg.open = false" x-text="removeDlg.result ? 'Close' : 'Cancel'"></button>
+        <button x-show="!removeDlg.result" class="modal-btn" :class="removeDlg.deleteFiles ? 'danger' : 'primary'"
+                :disabled="!removeDlg.preview || removeDlg.busy || removeDlg.preview.sounds === 0 && !removeDlg.preview.is_root"
+                @click="confirmRemove()"
+                x-text="removeDlg.busy ? 'Working…' : (removeDlg.deleteFiles ? 'Remove and move ' + removeDlgNoun(removeDlg.preview ? removeDlg.preview.sounds : 0) + ' to Trash' : 'Remove from library')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ AI MODELS PANEL -->
+  <div class="modal-backdrop" x-show="$store.models.open" @click.self="$store.models.closePanel()" @keydown.escape.window="$store.models.closePanel()" x-cloak>
+    <div class="modal-box">
+      <div class="modal-title">AI models</div>
+      <p class="model-note" style="margin:0 0 6px;">
+        Daouchi works fully without models. Download them only for semantic search, mood search, SFX categories, the acoustic radar and tag suggestions.
+      </p>
+
+      <div x-show="!$store.models.available" class="model-note" style="color:var(--text-dim);padding:10px 0;">
+        Model downloads are not available on this server yet.
+      </div>
+
+      <template x-for="m in $store.models.list" :key="m.name">
+        <div class="model-row">
+          <div class="model-row-head">
+            <div>
+              <span x-text="m.label"></span>
+              <span class="model-size" x-text="'· ' + $store.models.fmt(m.total_bytes)"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="model-status"
+                    :class="{ ready: m.status === 'ready' && !$store.models.isOptimizing(m.name), busy: m.downloading || $store.models.isOptimizing(m.name) }"
+                    x-text="$store.models.isOptimizing(m.name) ? 'Optimizing for this Mac…'
+                            : m.downloading ? 'Downloading ' + $store.models.pct(m) + '%'
+                            : m.status === 'ready' ? 'Ready'
+                            : m.status === 'partial' ? 'Incomplete' : 'Not downloaded'"></span>
+              <button class="modal-btn primary" style="padding:3px 10px;font-size:11px;"
+                      x-show="m.status !== 'ready' && !m.downloading"
+                      @click="$store.models.download(m.name)"
+                      x-text="m.status === 'partial' ? 'Resume' : 'Download'"></button>
+            </div>
+          </div>
+          <div class="progress-bar-track" style="margin-top:6px;" x-show="m.downloading">
+            <div class="progress-bar-fill" :style="'width:' + $store.models.pct(m) + '%'"></div>
+          </div>
+          <div class="model-note" x-show="m.downloading"
+               x-text="$store.models.fmt(m.downloading && m.downloading.done_bytes) + ' of ' + $store.models.fmt(m.downloading && m.downloading.total_bytes) + (m.downloading && m.downloading.file ? ' · ' + m.downloading.file : '')"></div>
+          <div class="model-note" x-show="$store.models.isOptimizing(m.name)">
+            First use compiles the model for this Mac's Neural Engine. This can take a couple of minutes and only happens once.
+          </div>
+          <div class="model-note" style="color:var(--red);" x-show="$store.models.errors[m.name]" x-text="$store.models.errors[m.name]"></div>
+        </div>
+      </template>
+
+      <p class="model-note" style="margin-top:10px;">
+        Files live in <code>~/.daouchi/models</code>. You can delete them to free space, or copy a model folder there yourself to preseed it.
+      </p>
+
+      <div class="modal-footer">
+        <button class="modal-btn" @click="$store.models.closePanel()">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════ SHORTCUTS OVERLAY -->
+  <div
+    x-show="showShortcuts"
+    @click.self="showShortcuts = false"
+    class="modal-backdrop"
+    style="z-index:500;"
+    x-cloak
+  >
+    <div class="modal-box" style="min-width:480px;">
+      <div class="modal-title">Keyboard Shortcuts</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;font-size:12px;">
+        <div><span class="kbd">Space</span> Play / Pause</div>
+        <div><span class="kbd">↑↓</span> Navigate results</div>
+        <div><span class="kbd">I</span> Set In point</div>
+        <div><span class="kbd">O</span> Set Out point</div>
+        <div><span class="kbd">L</span> Toggle Loop</div>
+        <div><span class="kbd">Enter</span> Export clip</div>
+        <div><span class="kbd">⌘K</span> Command palette</div>
+        <div><span class="kbd">⌘F</span> Focus search</div>
+        <div><span class="kbd">⌘L</span> Library tab</div>
+        <div><span class="kbd">⌘D</span> Dashboard tab</div>
+        <div><span class="kbd">⌘R</span> Radar tab</div>
+        <div><span class="kbd">⌘E</span> Export clip</div>
+        <div><span class="kbd">[</span> Previous result</div>
+        <div><span class="kbd">]</span> Next result</div>
+        <div><span class="kbd">?</span> This shortcuts help</div>
+        <div><span class="kbd">Esc</span> Close overlay</div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn" @click="showShortcuts = false">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════ TOAST -->
+  <div
+    x-show="toast"
+    x-cloak
+    class="toast"
+    :class="'toast-' + (toast && toast.type || 'info')"
+    x-text="toast && toast.msg"
+  ></div>
+
+
+  <!-- ══════════════════════════════════════ COMMAND PALETTE -->
+  <div class="cmd-backdrop" x-show="showCmdPalette" @click.self="closeCmdPalette()" x-cloak>
+    <div class="cmd-box">
+      <div class="cmd-input-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          id="cmd-input"
+          class="cmd-input"
+          type="text"
+          placeholder="Type a command or search…"
+          x-model="cmdQuery"
+          @keydown="cmdKeydown($event)"
+          autocomplete="off"
+        />
+        <kbd style="font-size:10px;color:var(--muted);background:var(--border);padding:2px 6px;border-radius:3px;flex-shrink:0;">Esc</kbd>
+      </div>
+      <div class="cmd-results">
+        <template x-if="!cmdQuery">
+          <div class="cmd-section-label">Commands</div>
+        </template>
+        <template x-for="(cmd, idx) in cmdFiltered" :key="idx">
+          <div
+            class="cmd-item"
+            :class="{ active: cmdActiveIdx === idx }"
+            @click="cmdExecute(cmd)"
+            @mouseenter="cmdActiveIdx = idx"
+          >
+            <span class="cmd-icon" x-text="cmd.icon"></span>
+            <span class="cmd-label" x-text="cmd.label"></span>
+            <span class="cmd-shortcut" x-show="cmd.shortcut" x-text="cmd.shortcut"></span>
+          </div>
+        </template>
+        <div x-show="cmdFiltered.length === 0" style="padding:16px;text-align:center;font-size:12px;color:var(--muted);">No commands found</div>
+      </div>
+      <div style="padding:6px 16px;border-top:1px solid var(--border);display:flex;gap:12px;font-size:10px;color:var(--muted);">
+        <span>↑↓ navigate</span><span>↵ execute</span><span>Esc close</span><span style="margin-left:auto;">⌘K to open</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk tag modal -->
+  <div class="bulk-tag-modal-backdrop" x-show="bulkTagModalOpen" x-cloak @click.self="bulkTagModalOpen = false">
+    <div class="bulk-tag-modal-box" @click.stop>
+      <h3>Add tags to <span x-text="Object.keys(selectedMap).length"></span> files</h3>
+      <input type="text" x-model="bulkTagInput" placeholder="e.g. ambient, loop, oneshot" autocomplete="off"
+        @keydown.enter="bulkTagSubmit()"
+        @keydown.escape="bulkTagModalOpen = false" />
+      <div class="bulk-tag-modal-note">Comma-separated tags. Added to all selected files without removing existing tags.</div>
+      <div class="bulk-tag-modal-actions">
+        <button class="ctrl-btn" @click="bulkTagModalOpen = false">Cancel</button>
+        <button class="accent-btn header-btn" style="padding:5px 14px;" @click="bulkTagSubmit()">Add Tags</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══ RENAME / MOVE MODAL ══════════════════════════════════════════════ -->
+<div class="rename-modal-backdrop" id="rename-modal" style="display:none;" @click.self="closeRenameModal()">
+  <div class="rename-modal-box">
+    <h3 id="rename-modal-title">Rename file</h3>
+    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">New filename</label>
+    <input id="rename-input" type="text" placeholder="filename.wav" autocomplete="off" @keydown.enter="submitRename()" @keydown.escape="closeRenameModal()" />
+    <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Move to folder (optional — full path)</label>
+    <input id="rename-folder-input" type="text" placeholder="Leave blank to keep in same folder" autocomplete="off" @keydown.enter="submitRename()" @keydown.escape="closeRenameModal()" />
+    <div id="rename-error" style="font-size:11px;color:var(--red);min-height:16px;margin-top:4px;"></div>
+    <div class="rename-modal-actions">
+      <button class="ctrl-btn" onclick="closeRenameModal()">Cancel</button>
+      <button class="accent-btn header-btn" style="padding:5px 14px;" onclick="submitRename()">Rename</button>
+    </div>
+  </div>
+
+<!-- ── AI index building progress — fixed bottom-left overlay ── -->
+<div class="ai-progress-overlay" x-cloak
+     x-show="radarStatus === 'computing' || radarStatus === 'generating'"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 translate-y-2"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+  <div class="ai-progress-overlay-row">
+    <span class="spinner" style="width:8px;height:8px;border-width:1.5px;margin:0;flex-shrink:0;"></span>
+    <span style="font-size:11px;color:var(--text);font-weight:500;"
+          x-text="radarStatus === 'generating' ? 'Building Radar Map' : 'Building AI Index'"></span>
+    <span class="ai-progress-pct"
+          x-text="radarProgress.total > 0 ? Math.round(radarProgress.done / radarProgress.total * 100) + '%' : '…'"></span>
+    <button
+      @click="radarStatus = 'dismissed'"
+      title="Dismiss"
+      style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 4px;flex-shrink:0;"
+    >×</button>
+  </div>
+  <div class="ai-progress-bar progress-bar-track">
+    <div class="progress-bar-fill"
+         :style="'width:' + (radarProgress.total > 0 ? Math.round(radarProgress.done / radarProgress.total * 100) : 0) + '%'"></div>
+  </div>
+  <div class="ai-progress-detail"
+       x-text="(radarProgress.done || 0).toLocaleString() + ' / ' + (radarProgress.total || 0).toLocaleString() + ' sounds'"></div>
+</div>
+
+</div><!-- /#app -->
+
+<!-- CDN scripts (in order) -->
+<script src="/vendor/wavesurfer-7.12.12.min.js"></script>
+<script defer src="/vendor/alpine-3.17.5.min.js"></script>
+<script src="components/utils.js"></script>
+<script src="components/transport.js"></script>
+<script src="components/models.js"></script>
+<script src="components/sound-row.js"></script>
+<script src="app.js"></script>
+<script src="components/player.js"></script>
+<script src="components/radar.js"></script>
+<script src="components/dashboard.js"></script>
+<script src="components/projects.js"></script>
+<script src="components/desktop.js"></script>
+
+</body>
+</html>

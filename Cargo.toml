@@ -1,0 +1,48 @@
+[workspace]
+members = [".", "crates/daouchi-ai", "crates/daouchi-desktop"]
+# the root crate is a library; the app is `cargo run -p daouchi-desktop`
+default-members = [".", "crates/daouchi-desktop"]
+resolver = "2"
+
+[package]
+name = "daouchi"
+version = "0.1.0"
+license = "MIT"
+authors = ["Sonu Kumar Meena"]
+repository = "https://github.com/sahilsk/Daouchi"
+edition = "2021"
+
+[lib]
+name = "daouchi"
+path = "src/lib.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+walkdir = "2"
+rayon = "1"
+symphonia = { version = "0.5", features = ["mp3", "wav", "flac", "aac", "isomp4", "all-codecs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+blake3 = "1"
+tower-http = { version = "0.5", features = ["fs", "set-header"] }
+rust-embed = { version = "8", features = ["include-exclude", "debug-embed"] }
+tokio-stream = "0.1"
+tower = { version = "0.4", features = ["util"] }
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+mime_guess = "2"
+futures = "0.3"
+async-stream = "0.3"
+tokio-util = { version = "0.7", features = ["io"] }
+hound = "3"
+dirs = "6"
+trash = "5"
+daouchi-ai = { path = "crates/daouchi-ai" }
+
+[dev-dependencies]
+tower = { version = "0.4", features = ["util"] }

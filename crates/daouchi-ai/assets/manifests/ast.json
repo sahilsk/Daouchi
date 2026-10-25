@@ -1,0 +1,24 @@
+{
+  "name": "ast",
+  "version": "249a1fbf0286",
+  "files": [
+    {
+      "path": "onnx/model.onnx",
+      "url": "https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593/resolve/249a1fbf0286b40e7f1ed687a8ae396997bf7dc6/onnx/model.onnx",
+      "sha256": "6ff353b1e809da25f900b54494fd4ac12a6fc7db1e25195e238f21be125bb4bd",
+      "size": 346754297
+    },
+    {
+      "path": "config.json",
+      "url": "https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593/resolve/249a1fbf0286b40e7f1ed687a8ae396997bf7dc6/config.json",
+      "sha256": "49d0dce922da23685787c73a874d9b1ffa97297f8cc4dc0a4e8bef219725e44d",
+      "size": 26792
+    },
+    {
+      "path": "preprocessor_config.json",
+      "url": "https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593/resolve/249a1fbf0286b40e7f1ed687a8ae396997bf7dc6/preprocessor_config.json",
+      "sha256": "8d04ba5a9c6fca5d39d0de2b1fd05ecf79deb589fbba279728bbebac39934231",
+      "size": 297
+    }
+  ]
+}

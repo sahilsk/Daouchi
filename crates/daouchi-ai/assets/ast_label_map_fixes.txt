@@ -1,0 +1,33 @@
+LABEL_MAP fixes vs ai/ast_engine.py (lookup key = lowercase AudioSet display name).
+Python had 215 entries, 57 of which matched no real AudioSet class (never fired).
+
+RE-KEYED to the real label (tag value unchanged):
+'crackling' -> 'crackle' (tag 'crackling')
+'chirping birds' -> 'chirp, tweet' (tag 'birds')
+'pigeon' -> 'pigeon, dove' (tag 'pigeon')
+'fly, housefly, etc.' -> 'fly, housefly' (tag 'buzzing')
+'purring' -> 'purr' (tag 'purring')
+'cow' -> 'cattle, bovinae' (tag 'cow')
+'lion' -> 'roaring cats (lions, tigers)' (tag 'lion')
+'shouting' -> 'shout' (tag 'shouting')
+'heartbeat' -> 'heart sounds, heartbeat' (tag 'heartbeat')
+'r&b and soul music' -> 'rhythm and blues' (tag 'r&b')
+'train horn, train whistle' -> 'train horn' (tag 'train horn')
+'airplane' -> 'fixed-wing aircraft, airplane' (tag 'airplane')
+'church' -> 'church bell' (tag 'church')
+'crowd noise' -> 'hubbub, speech noise, speech babble' (tag 'crowd')
+'keyboard (computer)' -> 'computer keyboard' (tag 'keyboard typing')
+'splash' -> 'splash, splatter' (tag 'splash')
+'saw' -> 'sawing' (tag 'saw')
+'click' -> 'clicking' (tag 'click')
+'cannon' -> 'artillery fire' (tag 'cannon')
+'thud' -> 'thump, thud' (tag 'thud')
+'crash' -> 'smash, crash' (tag 'crash')
+'thwack, smack, whack' -> 'whack, thwack' (tag 'impact')
+'crinkle, crumple' -> 'crumpling, crinkling' (tag 'crinkle')
+'friction' -> 'rub' (tag 'friction')
+'static noise' -> 'static' (tag 'static')
+'buzzing' -> 'buzz' (tag 'buzzing')
+
+REMOVED (no corresponding AudioSet class; harmless in Python, dead data):
+sound, sounds, audio, signal, heavy rain, storm, hail, snow, lake, river, forest, jungle, yawn, beat, music box, car engine, car door, city, restaurant, office, construction, footstep, drop, grinding, paper, plastic, crumple, swallow, drinking, sipping, stomp, drone

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daouchi — Welcome</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1e1e1e; color: #d4d4d4;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; padding: 40px;
+    }
+    h1 { color: #e47a2a; font-size: 2.5em; letter-spacing: 0.15em; margin-bottom: 8px; }
+    .tagline { color: #888; margin-bottom: 48px; font-size: 0.95em; }
+    .models { width: 100%; max-width: 480px; }
+    .model { margin-bottom: 28px; }
+    .model-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9em; }
+    .model-name { color: #d4d4d4; }
+    .model-size { color: #888; }
+    .bar-track { height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+    .bar-fill { height: 100%; background: #e47a2a; border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+    .status { color: #888; font-size: 0.85em; margin-top: 40px; text-align: center; }
+    .model-btn { background: #e47a2a; border: none; color: #fff; padding: 4px 12px; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
+    .model-btn:hover { background: #f08c3a; }
+    .model-state { font-size: 0.8em; color: #888; margin-top: 6px; }
+    .model-state.err { color: #d05454; }
+    .open-btn { margin-top: 32px; background: #282828; border: 1px solid #e47a2a; color: #e47a2a; padding: 8px 22px; border-radius: 4px; cursor: pointer; font-size: 0.95em; text-decoration: none; }
+    .open-btn:hover { background: rgba(228,122,42,0.12); }
+    .note { color: #888; font-size: 0.8em; margin-top: 28px; max-width: 480px; text-align: center; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>DAOUCHI</h1>
+  <p class="tagline">Welcome &mdash; your library works right away. AI models are optional.</p>
+
+  <div class="models" id="models-container">
+    <div class="status">Checking models&hellip;</div>
+  </div>
+
+  <a class="open-btn" href="/">Open Daouchi</a>
+  <p class="note">
+    Models enable semantic search, mood search, SFX categories, the acoustic radar and tag suggestions.
+    You can download them any time from the AI button in the header. Files live in
+    ~/.daouchi/models and can be deleted or preseeded by copying a model folder there.
+    After a download, the first use may show &ldquo;Optimizing for this Mac&hellip;&rdquo; for a couple of minutes.
+  </p>
+
+  <script src="components/models.js"></script>
+  <script>
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
+    function render() {
+      const S = DaouchiModels._store()
+      const el = document.getElementById('models-container')
+      if (!S.available) { el.innerHTML = '<div class="status">Model downloads are not available on this server yet.</div>'; return }
+      if (!S.list.length) { el.innerHTML = '<div class="status">Checking models&hellip;</div>'; return }
+      el.innerHTML = S.list.map(m => {
+        const busy = !!m.downloading
+        const state = S.isOptimizing(m.name) ? 'Optimizing for this Mac\u2026'
+                    : busy ? 'Downloading ' + S.pct(m) + '% (' + S.fmt(m.downloading.done_bytes) + ' of ' + S.fmt(m.downloading.total_bytes) + ')'
+                    : m.status === 'ready' ? '\u2713 Ready'
+                    : m.status === 'partial' ? 'Incomplete download' : 'Not downloaded'
+        const action = (m.status !== 'ready' && !busy)
+          ? '<button class="model-btn" onclick="DaouchiModels.download(\'' + esc(m.name) + '\')">' + (m.status === 'partial' ? 'Resume' : 'Download') + '</button>' : ''
+        return `<div class="model">
+          <div class="model-header">
+            <span class="model-name">${esc(m.label)} <span class="model-size">&middot; ${esc(S.fmt(m.total_bytes))}</span></span>
+            ${action}
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${busy ? S.pct(m) : (m.status === 'ready' ? 100 : 0)}%"></div></div>
+          <div class="model-state">${esc(state)}</div>
+          ${S.errors[m.name] ? '<div class="model-state err">' + esc(S.errors[m.name]) + '</div>' : ''}
+        </div>`
+      }).join('')
+    }
+
+    document.addEventListener('models-changed', render)
+    DaouchiModels.initStandalone()
+  </script>
+</body>
+</html>
